@@ -3,7 +3,15 @@ const bcrypt = require('bcryptjs');
 const jwt    = require('jsonwebtoken');
 
 const SALT_ROUNDS = 12;
-const TOKEN_TTL   = '7d';
+const TOKEN_TTL   = '24h';
+
+const COOKIE_OPTS = {
+  httpOnly: true,
+  secure:   process.env.NODE_ENV === 'production',
+  sameSite: 'lax',
+  maxAge:   24 * 60 * 60 * 1000, // 24 hours in ms
+  path:     '/',
+};
 
 function sign(user) {
   return jwt.sign(
@@ -11,6 +19,10 @@ function sign(user) {
     process.env.JWT_SECRET,
     { expiresIn: TOKEN_TTL }
   );
+}
+
+function setAuthCookie(res, user) {
+  res.cookie('token', sign(user), COOKIE_OPTS);
 }
 
 exports.register = async (req, res, next) => {
@@ -30,7 +42,8 @@ exports.register = async (req, res, next) => {
       'INSERT INTO users (email, password_hash, role) VALUES ($1, $2, $3) RETURNING id, email, role',
       [email.toLowerCase().trim(), hash, 'user']
     );
-    res.status(201).json({ token: sign(rows[0]), user: rows[0] });
+    setAuthCookie(res, rows[0]);
+    res.status(201).json({ user: rows[0] });
   } catch (err) {
     if (err.code === '23505') {
       return res.status(409).json({ error: 'Email already in use' });
@@ -57,10 +70,16 @@ exports.login = async (req, res, next) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     const { password_hash, ...user } = rows[0];
-    res.json({ token: sign(user), user });
+    setAuthCookie(res, user);
+    res.json({ user });
   } catch (err) {
     next(err);
   }
+};
+
+exports.logout = (req, res) => {
+  res.clearCookie('token', { ...COOKIE_OPTS, maxAge: 0 });
+  res.json({ success: true });
 };
 
 exports.me = (req, res) => {

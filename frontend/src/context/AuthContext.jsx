@@ -8,21 +8,19 @@ export function AuthProvider({ children }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { setReady(true); return; }
+    // Verify session via cookie — no localStorage needed
     api.get('/auth/me')
       .then(r => setUser(r.data.user))
-      .catch(() => localStorage.removeItem('token'))
+      .catch(() => {})
       .finally(() => setReady(true));
   }, []);
 
-  function login(token, userData) {
-    localStorage.setItem('token', token);
+  function login(userData) {
     setUser(userData);
   }
 
-  function logout() {
-    localStorage.removeItem('token');
+  async function logout() {
+    try { await api.post('/auth/logout'); } catch { /* ignore */ }
     setUser(null);
   }
 

@@ -1,20 +1,14 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000/api',
-});
-
-api.interceptors.request.use(config => {
-  const token = localStorage.getItem('token');
-  if (token) config.headers['Authorization'] = `Bearer ${token}`;
-  return config;
+  baseURL: '/api',
+  withCredentials: true, // send httpOnly cookie on every request
 });
 
 api.interceptors.response.use(
   r => r,
   err => {
     if (err.response?.status === 401 && window.location.pathname !== '/login') {
-      localStorage.removeItem('token');
       window.location.href = '/login';
     }
     return Promise.reject(err);

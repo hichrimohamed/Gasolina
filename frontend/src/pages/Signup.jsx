@@ -24,7 +24,7 @@ export default function Signup() {
     setLoading(true);
     try {
       const { data } = await api.post('/auth/register', { email, password });
-      login(data.token, data.user);
+      login(data.user);
       navigate('/', { replace: true });
     } catch (err) {
       setError(err.response?.data?.error || 'Une erreur est survenue');

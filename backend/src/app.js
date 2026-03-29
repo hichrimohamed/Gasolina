@@ -1,7 +1,8 @@
-const express   = require('express');
-const cors      = require('cors');
-const helmet    = require('helmet');
-const rateLimit = require('express-rate-limit');
+const express      = require('express');
+const cors         = require('cors');
+const helmet       = require('helmet');
+const rateLimit    = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 const { verifyToken, requireAdmin } = require('./middleware/auth.middleware');
 const app = express();
 
@@ -22,6 +23,7 @@ app.use(cors({
 
 // Body size limit (prevent large payload attacks)
 app.use(express.json({ limit: '1mb' }));
+app.use(cookieParser());
 
 // Rate limiting on auth endpoints
 const authLimiter = rateLimit({
