@@ -1,0 +1,203 @@
+/* ── PAGE ── */
+.tasks-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+}
+
+.tasks-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tasks-loading {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 60px 0;
+}
+
+/* ── KANBAN BOARD ── */
+.kanban-board {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex: 1;
+  min-height: 0;
+}
+
+.kanban-col {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* ── COLUMN HEADER ── */
+.kanban-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.kanban-col-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.kanban-col--todo       .kanban-col-label { color: var(--pending-text); }
+.kanban-col--inprogress .kanban-col-label { color: var(--teal); }
+.kanban-col--done       .kanban-col-label { color: var(--success-text); }
+
+.kanban-col-count {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 1px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  min-width: 24px;
+  text-align: center;
+}
+
+/* ── COLUMN BODY ── */
+.kanban-col-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  min-height: 120px;
+  max-height: calc(100vh - 240px);
+  overflow-y: auto;
+}
+
+.kanban-empty {
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 24px 0;
+}
+
+/* ── TASK CARD ── */
+.task-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  transition: box-shadow .12s;
+}
+
+.task-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,.07); }
+
+.task-card--done { opacity: .65; }
+.task-card--done .task-card-title { text-decoration: line-through; }
+
+.task-card-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.task-card-desc {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* ── CARD META ── */
+.task-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.task-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 2px 7px;
+}
+
+.task-meta-overdue {
+  color: var(--red);
+  border-color: #fcc;
+  background: #fff0f2;
+}
+
+.task-meta-event {
+  color: var(--teal);
+}
+
+/* ── CARD ACTIONS ── */
+.task-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border);
+  padding-top: 7px;
+  margin-top: 2px;
+}
+
+.task-move-btns,
+.task-edit-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.task-action-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  transition: background .1s, color .1s, border-color .1s;
+}
+
+.task-action-btn:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.task-action-btn--delete:hover {
+  background: #fff0f2;
+  color: var(--red);
+  border-color: #fcc;
+}
+
+/* ── MODAL (reuses Calendar.css modal-* classes) ── */
+
+/* ── RESPONSIVE ── */
+@media (max-width: 860px) {
+  .kanban-board {
+    flex-direction: column;
+  }
+  .kanban-col-body {
+    max-height: 300px;
+  }
+}

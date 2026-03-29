@@ -1,0 +1,2 @@
+/* Global reset — design tokens and layout live in Layout.css */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

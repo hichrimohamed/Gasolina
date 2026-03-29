@@ -1,0 +1,2 @@
+ALTER TABLE calendar_events
+  ADD COLUMN IF NOT EXISTS worker_id INTEGER REFERENCES workers(id) ON DELETE SET NULL;

@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Station Service – Tableau de Bord</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal: #0d4f4a;
+    --teal-mid: #1a6b63;
+    --green: #2ecc8e;
+    --green-light: #3ddba0;
+    --bg: #f5f6f8;
+    --sidebar-bg: #ffffff;
+    --card: #ffffff;
+    --text: #1a1f2e;
+    --muted: #8a92a6;
+    --border: #e8eaef;
+    --red: #ef5c6b;
+    --success-bg: #eafaf3;
+    --success-text: #1aa168;
+    --pending-bg: #fef6e4;
+    --pending-text: #c07a10;
+    --sidebar-w: 240px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 24px 0;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 10;
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 20px 28px;
+    font-weight: 600; font-size: 16px; color: var(--text);
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--teal);
+    border-radius: 8px;
+    display: grid; place-items: center;
+  }
+  .logo-icon svg { color: var(--green); }
+
+  .nav-label {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: .08em;
+    color: var(--muted);
+    padding: 0 20px 8px;
+    text-transform: uppercase;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 20px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background .15s, color .15s;
+    font-weight: 400;
+    position: relative;
+  }
+  .nav-item:hover { background: var(--bg); color: var(--text); }
+  .nav-item.active {
+    background: #eef9f5;
+    color: var(--teal);
+    font-weight: 500;
+  }
+  .nav-item.active::before {
+    content: '';
+    position: absolute; left: 0; top: 4px; bottom: 4px;
+    width: 3px; background: var(--green);
+    border-radius: 0 2px 2px 0;
+  }
+  .nav-item svg { flex-shrink: 0; }
+
+  .badge {
+    margin-left: auto;
+    background: var(--green); color: #fff;
+    font-size: 10px; font-weight: 600;
+    border-radius: 20px; padding: 1px 7px;
+  }
+
+  .sidebar-spacer { flex: 1; }
+  .sidebar-bottom { border-top: 1px solid var(--border); padding-top: 16px; }
+
+  .user-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 20px;
+  }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--teal), var(--green));
+    display: grid; place-items: center;
+    color: #fff; font-weight: 600; font-size: 12px;
+    flex-shrink: 0;
+  }
+  .user-name { font-weight: 500; font-size: 13px; }
+  .user-email { font-size: 11px; color: var(--muted); }
+  .user-chevron { margin-left: auto; color: var(--muted); }
+
+  /* ── MAIN ── */
+  .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px 28px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 5;
+  }
+  .search-box {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    width: 260px;
+    color: var(--muted);
+  }
+  .search-box input {
+    border: none; outline: none; background: none;
+    font-family: inherit; font-size: 13px; color: var(--text);
+    flex: 1;
+  }
+  .search-box input::placeholder { color: var(--muted); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+  .date-pill {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px; color: var(--text); font-weight: 500;
+  }
+  .period-select {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px; color: var(--text); font-weight: 500;
+    cursor: pointer;
+  }
+  .export-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: none; border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 14px;
+    font-family: inherit; font-size: 13px;
+    color: var(--text); font-weight: 500; cursor: pointer;
+  }
+
+  /* ── CONTENT ── */
+  .content { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(130deg, var(--teal) 0%, var(--teal-mid) 60%, #1e8070 100%);
+    border-radius: 16px;
+    padding: 28px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; right: -60px; top: -60px;
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    background: rgba(46,204,142,.08);
+  }
+  .hero::after {
+    content: '';
+    position: absolute; right: 60px; bottom: -80px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(46,204,142,.06);
+  }
+  .hero-label { font-size: 13px; color: rgba(255,255,255,.7); margin-bottom: 8px; }
+  .hero-amount { font-size: 38px; font-weight: 600; color: #fff; letter-spacing: -.5px; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(46,204,142,.2);
+    color: var(--green-light);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 13px; font-weight: 500;
+    margin-left: 12px;
+  }
+  .hero-actions { display: flex; gap: 10px; z-index: 1; }
+  .btn-primary {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--green); color: #fff;
+    border: none; border-radius: 8px;
+    padding: 10px 20px;
+    font-family: inherit; font-size: 14px; font-weight: 500;
+    cursor: pointer;
+  }
+  .btn-ghost {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.12); color: #fff;
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 8px; padding: 10px 20px;
+    font-family: inherit; font-size: 14px; font-weight: 500;
+    cursor: pointer;
+  }
+
+  /* ── GRID ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 280px; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid-bottom { display: grid; grid-template-columns: 1fr 280px; gap: 20px; }
+
+  /* ── CARD ── */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; }
+
+  /* ── CASHFLOW ── */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .section-title { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; }
+  .tab-group {
+    display: flex; gap: 2px;
+    background: var(--bg); border-radius: 8px; padding: 3px;
+  }
+  .tab {
+    padding: 5px 14px; border-radius: 6px;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    color: var(--muted); transition: all .15s;
+  }
+  .tab.active { background: #fff; color: var(--teal); box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+
+  /* BAR CHART */
+  .bars-wrap { display: flex; align-items: flex-end; gap: 4px; flex: 1; height: calc(100% - 24px); position: relative; }
+  .bar-pos, .bar-neg { width: 100%; border-radius: 3px; transition: opacity .2s; cursor: pointer; }
+  .bar-pos { background: var(--teal); }
+  .bar-neg { background: var(--red); }
+
+  /* INCOME / EXPENSE SIDE */
+  .ie-side { display: flex; flex-direction: column; gap: 16px; }
+  .ie-card { border: 1px solid var(--border); border-radius: 12px; padding: 18px; display: flex; align-items: flex-start; gap: 14px; }
+  .ie-icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; }
+  .ie-icon.income { background: var(--teal); }
+  .ie-icon.expense { background: var(--red); }
+  .ie-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .ie-amount { font-size: 22px; font-weight: 600; }
+  .up { color: var(--success-text); font-size: 12px; font-weight: 500; }
+  .down { color: var(--red); font-size: 12px; font-weight: 500; }
+
+  /* STAT CARDS */
+  .stat-label { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .stat-name { font-weight: 500; font-size: 14px; }
+  .stat-period { font-size: 11px; color: var(--muted); }
+  .stat-amount { font-size: 24px; font-weight: 600; margin-bottom: 4px; }
+  .stat-vs { font-size: 11px; color: var(--muted); }
+
+  /* FUEL GAUGE mini bars */
+  .fuel-bars { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+  .fuel-row { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+  .fuel-label { width: 80px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fuel-track { flex: 1; height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+  .fuel-fill { height: 100%; border-radius: 3px; background: var(--green); }
+  .fuel-val { width: 60px; text-align: right; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text); }
+
+  /* RECENT ACTIVITY */
+  .activity-header { display: flex; align-items: center; gap: 8px; justify-content: space-between; margin-bottom: 16px; }
+  .filter-sort { display: flex; gap: 8px; }
+  .ctrl-btn {
+    display: flex; align-items: center; gap: 5px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 7px; padding: 6px 12px;
+    font-family: inherit; font-size: 12px;
+    color: var(--text); cursor: pointer;
+  }
+
+  .table-header {
+    display: grid;
+    grid-template-columns: 2fr 1.2fr 1fr 1.2fr;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .th { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+
+  .tx-row {
+    display: grid;
+    grid-template-columns: 2fr 1.2fr 1fr 1.2fr;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background .12s;
+  }
+  .tx-row:hover { background: var(--bg); border-radius: 8px; }
+  .tx-row:last-child { border-bottom: none; }
+  .tx-info { display: flex; align-items: center; gap: 10px; }
+  .tx-dot { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; }
+  .tx-dot.add { background: var(--success-bg); color: var(--success-text); }
+  .tx-dot.send { background: #fff0f2; color: var(--red); }
+  .tx-name { font-weight: 500; font-size: 13px; }
+  .tx-sub { font-size: 11px; color: var(--muted); }
+  .tx-amount { font-weight: 500; font-size: 13px; }
+  .tx-usd { font-size: 11px; color: var(--muted); }
+  .status-badge { display: inline-flex; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+  .status-badge.success { background: var(--success-bg); color: var(--success-text); }
+  .status-badge.pending { background: var(--pending-bg); color: var(--pending-text); }
+  .tx-method { font-size: 13px; font-weight: 400; }
+  .tx-method-sub { font-size: 11px; color: var(--muted); }
+
+  /* FUEL CARD */
+  .fuel-card-visual {
+    border-radius: 14px;
+    padding: 22px;
+    background: linear-gradient(135deg, #0d4f4a 0%, #1e8070 50%, #2ecc8e 100%);
+    color: #fff;
+    position: relative; overflow: hidden;
+    min-height: 150px;
+  }
+  .fuel-card-visual::before {
+    content: ''; position: absolute; right: -30px; top: -30px;
+    width: 140px; height: 140px; border-radius: 50%;
+    background: rgba(255,255,255,.07);
+  }
+  .fuel-type-label { font-size: 11px; opacity: .7; margin-bottom: 4px; }
+  .fuel-type-name { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+  .fuel-litres { font-family: 'DM Mono', monospace; font-size: 13px; opacity: .8; margin-bottom: 4px; }
+  .fuel-revenue { font-size: 24px; font-weight: 600; }
+
+  /* LOADING STATE */
+  .loading { opacity: .4; pointer-events: none; }
+  .skeleton { background: linear-gradient(90deg, var(--bg) 25%, #e0e2e8 50%, var(--bg) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .hero { animation: fadeUp .4s ease both; }
+  .grid-2 > * { animation: fadeUp .4s ease both; }
+  .grid-2 > *:nth-child(2) { animation-delay: .06s; }
+  .grid-3 > * { animation: fadeUp .4s ease both; }
+  .grid-3 > *:nth-child(2) { animation-delay: .04s; }
+  .grid-3 > *:nth-child(3) { animation-delay: .08s; }
+  .grid-bottom > * { animation: fadeUp .45s ease both; }
+  .grid-bottom > *:nth-child(2) { animation-delay: .06s; }
+
+  /* ERROR BANNER */
+  .error-banner {
+    background: #fff0f2; border: 1px solid #fcc; border-radius: 10px;
+    padding: 14px 18px; color: var(--red); font-size: 13px;
+    display: none; align-items: center; gap: 10px;
+  }
+  .error-banner.visible { display: flex; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">
+      <!-- fuel drop icon -->
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M9 3C9 3 4 8.5 4 11.5a5 5 0 0010 0C14 8.5 9 3 9 3z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    Station Manager
+  </div>
+
+  <div class="nav-label">Général</div>
+  <div class="nav-item active">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1.5" fill="currentColor"/><rect x="9" y="2" width="5" height="5" rx="1.5" fill="currentColor" opacity=".4"/><rect x="2" y="9" width="5" height="5" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="9" width="5" height="5" rx="1.5" fill="currentColor" opacity=".4"/></svg>
+    Tableau de Bord
+  </div>
+  <div class="nav-item">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M9 3C9 3 4 8.5 4 11.5a5 5 0 0010 0C14 8.5 9 3 9 3z" stroke="currentColor" stroke-width="1.5"/></svg>
+    Vente Carburants
+  </div>
+  <div class="nav-item">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 5h12M2 8h8M2 11h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    Vente Produits
+  </div>
+  <div class="nav-item">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 12V7l5-4 5 4v5a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.5"/></svg>
+    Vente Services
+  </div>
+
+  <div class="nav-label" style="margin-top:16px">Finances</div>
+  <div class="nav-item">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4h12v8a1 1 0 01-1 1H3a1 1 0 01-1-1V4z" stroke="currentColor" stroke-width="1.5"/><path d="M2 4l6 4 6-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    Recettes
+  </div>
+  <div class="nav-item">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1" stroke="currentColor" stroke-width="1.5"/></svg>
+    Dépenses
+  </div>
+  <div class="nav-item">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 12l4-4 3 3 5-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Marges
+    <span class="badge">Rapport</span>
+  </div>
+  <div class="nav-item">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 3h12M2 8h8M2 13h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    Achats
+  </div>
+
+  <div class="sidebar-spacer"></div>
+  <div class="sidebar-bottom">
+    <div class="nav-item">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Paramètres
+    </div>
+    <div class="user-row">
+      <div class="avatar">GS</div>
+      <div>
+        <div class="user-name">Gérant Station</div>
+        <div class="user-email">admin@station.tn</div>
+      </div>
+      <svg class="user-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 6l2 2 2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="search-box">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="#8a92a6" stroke-width="1.5"/><path d="M9.5 9.5l2.5 2.5" stroke="#8a92a6" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <input type="text" placeholder="Rechercher…">
+    </div>
+    <div class="topbar-right">
+      <div class="date-pill">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M4 1v2M10 1v2M1 5h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <span id="date-range-label">—</span>
+      </div>
+      <div class="period-select">
+        30 derniers jours
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <button class="export-btn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v7M4 6l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Exporter
+      </button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ERROR BANNER -->
+    <div class="error-banner" id="error-banner">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3m0 2.5h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span id="error-msg">Impossible de charger les données. Vérifiez que l'API est disponible sur <code>http://localhost:4000/api</code>.</span>
+    </div>
+
+    <!-- HERO — Total Vente -->
+    <div class="hero">
+      <div>
+        <div class="hero-label">Total Ventes (TTC)</div>
+        <div style="display:flex;align-items:baseline;gap:4px">
+          <div class="hero-amount" id="hero-balance">— DT</div>
+          <span class="hero-badge" id="hero-balance-change">—</span>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <button class="btn-primary">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Nouvelle Vente
+        </button>
+        <button class="btn-ghost">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 12l3-3 3 3 4-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Statistiques
+        </button>
+        <button class="btn-ghost">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v7M4 6l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Rapport
+        </button>
+      </div>
+    </div>
+
+    <!-- CASHFLOW + INCOME/EXPENSE -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v5l3-3M8 7l-3-3" stroke="var(--teal)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 14V9l3 3M8 9l-3 3" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Flux de Trésorerie Quotidien
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="tab-group">
+              <div class="tab active">Journalier</div>
+              <div class="tab">Mensuel</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BAR CHART -->
+        <div style="position:relative">
+          <div style="display:flex;gap:0;height:160px;align-items:center">
+            <div style="display:flex;flex-direction:column;justify-content:space-between;height:136px;margin-right:8px">
+              <span id="axis-top" style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">—</span>
+              <span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">0</span>
+              <span id="axis-bot" style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">—</span>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:0">
+              <div class="bars-wrap" id="bars-wrap" style="height:136px"></div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding-left:34px;margin-top:8px">
+            <span id="bar-date-start" style="font-size:10px;color:var(--muted)">—</span>
+            <span id="bar-date-end" style="font-size:10px;color:var(--muted)">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- INCOME / EXPENSE -->
+      <div class="ie-side">
+        <div class="ie-card">
+          <div class="ie-icon income">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 14V4M4 9l5-5 5 5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <div class="ie-label">Recettes</div>
+            <div class="ie-amount" id="income-amount">— DT</div>
+            <div class="up" id="income-change">—</div>
+          </div>
+        </div>
+        <div class="ie-card">
+          <div class="ie-icon expense">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 4v10M14 9l-5 5-5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <div class="ie-label">Dépenses</div>
+            <div class="ie-amount" id="expense-amount">— DT</div>
+            <div class="down" id="expense-change">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STAT CARDS — Carburant / Produits / Services -->
+    <div class="grid-3">
+      <div class="card">
+        <div class="stat-label">
+          <div style="display:flex;align-items:center;gap:8px">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M9 3C9 3 4 8.5 4 11.5a5 5 0 0010 0C14 8.5 9 3 9 3z" stroke="var(--muted)" stroke-width="1.3"/></svg>
+            <span class="stat-name">Vente Carburants</span>
+          </div>
+          <span class="stat-period">30 derniers jours</span>
+        </div>
+        <div class="stat-amount" id="carb-amount">— DT <span class="up" id="carb-change" style="font-size:13px">—</span></div>
+        <div class="stat-vs" id="carb-vs">vs. période précédente</div>
+        <!-- mini fuel bars -->
+        <div class="fuel-bars" id="fuel-bars"></div>
+      </div>
+      <div class="card">
+        <div class="stat-label">
+          <div style="display:flex;align-items:center;gap:8px">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 5h12M2 8h8M2 11h6" stroke="var(--muted)" stroke-width="1.3" stroke-linecap="round"/></svg>
+            <span class="stat-name">Vente Produits</span>
+          </div>
+          <span class="stat-period">30 derniers jours</span>
+        </div>
+        <div class="stat-amount" id="prod-amount">— DT <span class="up" id="prod-change" style="font-size:13px">—</span></div>
+        <div class="stat-vs" id="prod-vs">vs. période précédente</div>
+      </div>
+      <div class="card">
+        <div class="stat-label">
+          <div style="display:flex;align-items:center;gap:8px">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 12V7l5-4 5 4v5a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="var(--muted)" stroke-width="1.3"/></svg>
+            <span class="stat-name">Vente Services</span>
+          </div>
+          <span class="stat-period">30 derniers jours</span>
+        </div>
+        <div class="stat-amount" id="svc-amount">— DT <span class="up" id="svc-change" style="font-size:13px">—</span></div>
+        <div class="stat-vs" id="svc-vs">vs. période précédente</div>
+      </div>
+    </div>
+
+    <!-- RECENT ACTIVITY + FUEL SUMMARY CARD -->
+    <div class="grid-bottom">
+      <div class="card">
+        <div class="activity-header">
+          <div class="section-title">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h3l2-5 2 10 2-7 1 2h2" stroke="var(--teal)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Activité Récente
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="filter-sort">
+              <button class="ctrl-btn">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 3h10M3 6h6M5 9h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                Filtrer
+              </button>
+              <button class="ctrl-btn">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4h8M2 8h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M9 6l2 2-2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Trier
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-header">
+          <div class="th">Vendeur / Type</div>
+          <div class="th">Montant</div>
+          <div class="th">Statut</div>
+          <div class="th">Mode Paiement</div>
+        </div>
+
+        <div id="activity-body"></div>
+      </div>
+
+      <!-- FUEL CARD -->
+      <div class="card">
+        <div class="cards-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div class="section-title">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M9 3C9 3 4 8.5 4 11.5a5 5 0 0010 0C14 8.5 9 3 9 3z" stroke="var(--teal)" stroke-width="1.3"/></svg>
+            Stock Carburant
+          </div>
+          <span style="font-size:12px;color:var(--teal);font-weight:500;cursor:pointer">Voir tout</span>
+        </div>
+        <div class="fuel-card-visual" id="fuel-card-visual">
+          <div class="fuel-type-label">Cuve principale</div>
+          <div class="fuel-type-name" id="fuel-card-name">—</div>
+          <div class="fuel-litres" id="fuel-card-litres">— L achetés</div>
+          <div class="fuel-revenue" id="fuel-card-revenue">— DT</div>
+        </div>
+        <!-- small cuve list -->
+        <div class="fuel-bars" id="cuve-list" style="margin-top:16px"></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<script>
+  // ── Helpers ──────────────────────────────────────────────
+  function fmtDT(amount) {
+    if (amount === null || amount === undefined || isNaN(amount)) return '— DT';
+    const sign = amount < 0 ? '-' : '';
+    return sign + Math.abs(amount).toLocaleString('fr-TN', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + ' DT';
+  }
+
+  function fmtPct(pct) {
+    if (pct === null || pct === undefined || isNaN(pct)) return '—';
+    const sign = pct > 0 ? '↗ ' : pct < 0 ? '↘ ' : '';
+    return sign + Math.abs(pct).toFixed(1) + '%';
+  }
+
+  function fmtDate(d) {
+    return new Intl.DateTimeFormat('fr-TN', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(d));
+  }
+
+  function fmtShort(d) {
+    return new Intl.DateTimeFormat('fr-TN', { day: '2-digit', month: 'short' }).format(new Date(d));
+  }
+
+  // ── Cashflow chart ────────────────────────────────────────
+  function renderCashflowChart(data) {
+    const wrap = document.getElementById('bars-wrap');
+    if (!wrap || !data || data.length === 0) return;
+    wrap.innerHTML = '';
+
+    const values = data.map(d => parseFloat(d.solde) || 0);
+    const recettes = data.map(d => parseFloat(d.total_vente) || 0);
+    const depenses = data.map(d => parseFloat(d.dep_caisse) || 0);
+
+    const maxVal = Math.max(...recettes, 1);
+    const maxDep = Math.max(...depenses, 1);
+    const totalRange = Math.max(maxVal, maxDep, 1);
+
+    // axis labels
+    document.getElementById('axis-top').textContent = (maxVal / 1000).toFixed(0) + 'K DT';
+    document.getElementById('axis-bot').textContent = (maxDep / 1000).toFixed(0) + 'K DT';
+
+    // date labels
+    if (data.length > 0) {
+      document.getElementById('bar-date-start').textContent = fmtShort(data[0].date_stat);
+      document.getElementById('bar-date-end').textContent = fmtShort(data[data.length - 1].date_stat);
+    }
+
+    const posContainer = document.createElement('div');
+    posContainer.style.cssText = 'display:flex;align-items:flex-end;gap:4px;height:80px;flex:1';
+    const negContainer = document.createElement('div');
+    negContainer.style.cssText = 'display:flex;align-items:flex-start;gap:4px;height:56px;flex:1';
+
+    data.forEach((day, i) => {
+      const rec = recettes[i];
+      const dep = depenses[i];
+
+      const posGroup = document.createElement('div');
+      posGroup.style.cssText = 'flex:1;display:flex;flex-direction:column;justify-content:flex-end';
+      if (rec > 0) {
+        const bar = document.createElement('div');
+        bar.className = 'bar-pos';
+        bar.style.height = Math.max((rec / totalRange) * 80, 2) + 'px';
+        bar.title = fmtDate(day.date_stat) + '\nRecette: ' + fmtDT(rec);
+        posGroup.appendChild(bar);
+      }
+      posContainer.appendChild(posGroup);
+
+      const negGroup = document.createElement('div');
+      negGroup.style.cssText = 'flex:1';
+      if (dep > 0) {
+        const bar = document.createElement('div');
+        bar.className = 'bar-neg';
+        bar.style.height = Math.max((dep / totalRange) * 56, 2) + 'px';
+        bar.title = fmtDate(day.date_stat) + '\nDépense: ' + fmtDT(dep);
+        negGroup.appendChild(bar);
+      }
+      negContainer.appendChild(negGroup);
+    });
+
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'display:flex;flex-direction:column;gap:0;flex:1;height:136px';
+    wrapper.appendChild(posContainer);
+    const line = document.createElement('div');
+    line.style.cssText = 'height:2px;background:var(--border);margin:2px 0;flex-shrink:0';
+    wrapper.appendChild(line);
+    wrapper.appendChild(negContainer);
+    wrap.appendChild(wrapper);
+  }
+
+  // ── Activity rows ─────────────────────────────────────────
+  function renderActivity(rows) {
+    const body = document.getElementById('activity-body');
+    if (!body) return;
+    body.innerHTML = '';
+
+    rows.forEach(tx => {
+      const row = document.createElement('div');
+      row.className = 'tx-row';
+
+      // type column
+      const info = document.createElement('div');
+      info.className = 'tx-info';
+      const dot = document.createElement('div');
+      dot.className = 'tx-dot ' + (tx.type === 'recette' ? 'add' : 'send');
+      dot.innerHTML = tx.type === 'recette'
+        ? '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'
+        : '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      const infoText = document.createElement('div');
+      const name = document.createElement('div');
+      name.className = 'tx-name';
+      name.textContent = tx.vendeur || tx.type_dep || '—';
+      const sub = document.createElement('div');
+      sub.className = 'tx-sub';
+      sub.textContent = (tx.type === 'recette' ? 'Recette' : 'Dépense') + ' · ' + fmtDate(tx.date);
+      infoText.appendChild(name); infoText.appendChild(sub);
+      info.appendChild(dot); info.appendChild(infoText);
+
+      // amount
+      const amtCol = document.createElement('div');
+      const amt = document.createElement('div');
+      amt.className = 'tx-amount';
+      amt.textContent = fmtDT(tx.montant_ttc);
+      if (tx.type === 'depense') amt.style.color = 'var(--red)';
+      amtCol.appendChild(amt);
+
+      // status
+      const statusCol = document.createElement('div');
+      const badge = document.createElement('span');
+      badge.className = 'status-badge success';
+      badge.textContent = 'Validé';
+      statusCol.appendChild(badge);
+
+      // mode paiement
+      const methodCol = document.createElement('div');
+      const m = document.createElement('div');
+      m.className = 'tx-method';
+      m.textContent = tx.mode_paiement || '—';
+      const ms = document.createElement('div');
+      ms.className = 'tx-method-sub';
+      ms.textContent = tx.equipe ? 'Équipe ' + tx.equipe : '';
+      methodCol.appendChild(m); methodCol.appendChild(ms);
+
+      row.appendChild(info); row.appendChild(amtCol);
+      row.appendChild(statusCol); row.appendChild(methodCol);
+      body.appendChild(row);
+    });
+  }
+
+  // ── Fuel bars ─────────────────────────────────────────────
+  function renderFuelBars(cuves) {
+    const container = document.getElementById('fuel-bars');
+    if (!container || !cuves || cuves.length === 0) return;
+    container.innerHTML = '';
+    const maxQ = Math.max(...cuves.map(c => c.quantite), 1);
+    cuves.forEach(c => {
+      const row = document.createElement('div');
+      row.className = 'fuel-row';
+      row.innerHTML = `
+        <span class="fuel-label">${c.libelle}</span>
+        <div class="fuel-track"><div class="fuel-fill" style="width:${Math.round((c.quantite/maxQ)*100)}%"></div></div>
+        <span class="fuel-val">${(c.quantite/1000).toFixed(0)}K L</span>
+      `;
+      container.appendChild(row);
+    });
+
+    // fuel card visual (top cuve)
+    const top = cuves[0];
+    if (top) {
+      document.getElementById('fuel-card-name').textContent = top.libelle;
+      document.getElementById('fuel-card-litres').textContent = top.quantite.toLocaleString('fr-TN') + ' L achetés';
+      document.getElementById('fuel-card-revenue').textContent = fmtDT(top.total_ht);
+    }
+
+    // cuve list below fuel card
+    const cuveList = document.getElementById('cuve-list');
+    if (cuveList) {
+      cuveList.innerHTML = '';
+      cuves.forEach(c => {
+        const row = document.createElement('div');
+        row.className = 'fuel-row';
+        row.innerHTML = `
+          <span class="fuel-label">${c.libelle}</span>
+          <div class="fuel-track"><div class="fuel-fill" style="width:${Math.round((c.quantite/maxQ)*100)}%"></div></div>
+          <span class="fuel-val">${fmtDT(c.total_ht).replace(' DT','')}</span>
+        `;
+        cuveList.appendChild(row);
+      });
+    }
+  }
+
+  // ── Main render ───────────────────────────────────────────
+  function renderDashboard(data) {
+    // date range
+    if (data.period) {
+      document.getElementById('date-range-label').textContent =
+        fmtDate(data.period.from) + ' – ' + fmtDate(data.period.to);
+    }
+
+    // hero
+    if (data.totals) {
+      const { total_vente, balanceChangePct, total_recette, income_change, total_depense, expense_change } = data.totals;
+      document.getElementById('hero-balance').textContent = fmtDT(total_vente);
+      document.getElementById('hero-balance-change').textContent = fmtPct(balanceChangePct);
+
+      document.getElementById('income-amount').textContent = fmtDT(total_recette);
+      const incomeCh = document.getElementById('income-change');
+      incomeCh.textContent = fmtPct(income_change);
+      incomeCh.className = (income_change >= 0) ? 'up' : 'down';
+
+      document.getElementById('expense-amount').textContent = fmtDT(total_depense);
+      const expCh = document.getElementById('expense-change');
+      expCh.textContent = fmtPct(expense_change);
+      expCh.className = (expense_change <= 0) ? 'up' : 'down';
+    }
+
+    // stat cards
+    if (data.byCategory) {
+      const { carburant, produit, service } = data.byCategory;
+      if (carburant) {
+        document.getElementById('carb-amount').firstChild.textContent = fmtDT(carburant.amount) + ' ';
+        document.getElementById('carb-change').textContent = fmtPct(carburant.changePct);
+        document.getElementById('carb-vs').textContent = 'vs. ' + fmtDT(carburant.prevAmount) + ' période préc.';
+      }
+      if (produit) {
+        document.getElementById('prod-amount').firstChild.textContent = fmtDT(produit.amount) + ' ';
+        document.getElementById('prod-change').textContent = fmtPct(produit.changePct);
+        document.getElementById('prod-vs').textContent = 'vs. ' + fmtDT(produit.prevAmount) + ' période préc.';
+      }
+      if (service) {
+        document.getElementById('svc-amount').firstChild.textContent = fmtDT(service.amount) + ' ';
+        document.getElementById('svc-change').textContent = fmtPct(service.changePct);
+        document.getElementById('svc-vs').textContent = 'vs. ' + fmtDT(service.prevAmount) + ' période préc.';
+      }
+    }
+
+    // cashflow chart
+    if (Array.isArray(data.cashflowDaily)) {
+      renderCashflowChart(data.cashflowDaily);
+    }
+
+    // fuel cuves
+    if (Array.isArray(data.cuves)) {
+      renderFuelBars(data.cuves);
+    }
+
+    // activity
+    if (Array.isArray(data.recentActivity)) {
+      renderActivity(data.recentActivity);
+    }
+  }
+
+  // ── Nav interaction ───────────────────────────────────────
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      item.classList.add('active');
+    });
+  });
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      tab.closest('.tab-group').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+
+  // ── API fetch ─────────────────────────────────────────────
+  // Expected endpoint: GET /api/dashboard/kpis?period=30
+  // Expected response shape (adapt in your backend):
+  // {
+  //   period: { from: "2025-11-19", to: "2025-12-19" },
+  //   totals: {
+  //     total_vente: 450000.000,      -- statistique_journaliere SUM(total_vente)
+  //     balanceChangePct: 5.2,
+  //     total_recette: 480000.000,    -- recette SUM(montant_ttc)
+  //     income_change: 3.1,
+  //     total_depense: 30000.000,     -- depense SUM(montant_ttc)
+  //     expense_change: -2.0
+  //   },
+  //   byCategory: {
+  //     carburant: { amount, changePct, prevAmount },   -- statistique_journaliere SUM(ttc_carburant)
+  //     produit:   { amount, changePct, prevAmount },   -- statistique_journaliere SUM(ttc_produit_gaz)
+  //     service:   { amount, changePct, prevAmount }    -- statistique_journaliere SUM(ttc_service)
+  //   },
+  //   cashflowDaily: [                -- statistique_journaliere rows
+  //     { date_stat, total_vente, dep_caisse, solde }, ...
+  //   ],
+  //   cuves: [                        -- achat_carburant_detail JOIN cuve
+  //     { id, libelle, quantite, total_ht }, ...
+  //   ],
+  //   recentActivity: [               -- recette UNION depense, last 10
+  //     { type, date, vendeur, type_dep, montant_ttc, mode_paiement, equipe }, ...
+  //   ]
+  // }
+
+  const API_BASE = 'http://localhost:4000/api';
+
+  fetch(`${API_BASE}/dashboard/kpis?period=30`)
+    .then(r => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    })
+    .then(data => {
+      renderDashboard(data);
+    })
+    .catch(err => {
+      console.error('Dashboard load failed:', err);
+      const banner = document.getElementById('error-banner');
+      if (banner) banner.classList.add('visible');
+
+      // Render demo data so the layout is visible
+      renderDashboard(getDemoData());
+    });
+
+  // ── Demo data (shown when API is unreachable) ─────────────
+  function getDemoData() {
+    const today = new Date();
+    const from = new Date(today); from.setDate(from.getDate() - 29);
+    const days = [];
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(from); d.setDate(d.getDate() + i);
+      days.push({
+        date_stat: d.toISOString().slice(0, 10),
+        total_vente: 12000 + Math.random() * 8000,
+        dep_caisse: 800 + Math.random() * 1200,
+        solde: 0
+      });
+    }
+    return {
+      period: { from: from.toISOString().slice(0,10), to: today.toISOString().slice(0,10) },
+      totals: {
+        total_vente: 456780.250, balanceChangePct: 4.7,
+        total_recette: 456780.250, income_change: 4.7,
+        total_depense: 28450.800, expense_change: 12.3
+      },
+      byCategory: {
+        carburant: { amount: 385000.000, changePct: 3.2, prevAmount: 373000.000 },
+        produit:   { amount:  52000.000, changePct: 8.1, prevAmount:  48100.000 },
+        service:   { amount:  19780.250, changePct: -2.4, prevAmount: 20250.000 }
+      },
+      cashflowDaily: days,
+      cuves: [
+        { id: 2, libelle: 'GASOIL',           quantite: 870320, total_ht: 1660570.560 },
+        { id: 1, libelle: 'SUPER SANS PLOMB', quantite: 372281, total_ht:  906429.779 },
+        { id: 3, libelle: 'GASOIL SS',        quantite: 337693, total_ht:  718002.857 }
+      ],
+      recentActivity: [
+        { type:'recette', date:'2025-12-31', vendeur:'LOTFI RJEIBI',   montant_ttc: 6232.600, mode_paiement:'Espèce', equipe:3 },
+        { type:'recette', date:'2025-12-31', vendeur:'KAMEL TRAAÏ',    montant_ttc: 3203.600, mode_paiement:'Espèce', equipe:1 },
+        { type:'recette', date:'2025-12-30', vendeur:'MOULDI HAMDI',   montant_ttc: 3183.500, mode_paiement:'Espèce', equipe:7 },
+        { type:'depense', date:'2025-12-27', vendeur:'ADEL DRISSI',    montant_ttc:  231.000, mode_paiement:'Espèce', equipe:3, type_dep:'DIN1OL POUR LAVAGE' },
+        { type:'recette', date:'2025-12-27', vendeur:'MAKREM SLAIMIA', montant_ttc: 2978.000, mode_paiement:'Crédit', equipe:1 },
+        { type:'depense', date:'2025-12-19', vendeur:'LOTFI RJEIBI',   montant_ttc:  640.000, mode_paiement:'Espèce', equipe:3, type_dep:'RECETTE DES FINANCES' },
+      ]
+    };
+  }
+</script>
+</body>
+</html>

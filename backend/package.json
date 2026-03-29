@@ -1,0 +1,34 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "migrate": "/Applications/Postgres.app/Contents/Versions/latest/bin/psql -U $DB_USER -d $DB_NAME -f migrations/001_init_schema.sql",
+    "migrate:users": "/Applications/Postgres.app/Contents/Versions/latest/bin/psql -U mohamedhichri -d gaolina_db -f migrations/002_users.sql",
+    "migrate:calendar": "/Applications/Postgres.app/Contents/Versions/latest/bin/psql -U mohamedhichri -d gaolina_db -f migrations/003_calendar.sql",
+    "test": "jest --testPathPattern=src/tests"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.3.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.1.1",
+    "pg": "^8.20.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "jest": "^30.3.0",
+    "nodemon": "^3.1.14"
+  }
+}

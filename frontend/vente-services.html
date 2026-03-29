@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Station – Vente Services</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --teal:#0d4f4a;--teal-mid:#1a6b63;--green:#2ecc8e;--green-light:#3ddba0;
+    --bg:#f5f6f8;--card:#fff;--text:#1a1f2e;--muted:#8a92a6;--border:#e8eaef;
+    --red:#ef5c6b;--success-bg:#eafaf3;--success-text:#1aa168;
+    --pending-bg:#fef6e4;--pending-text:#c07a10;
+    --c500:#0d4f4a;--c501:#2ecc8e;--c502:#f59e0b;--c593:#5b6fff;--c594:#ef5c6b;
+    --sidebar-w:240px;
+  }
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:14px}
+
+  .sidebar{width:var(--sidebar-w);background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 0;position:fixed;top:0;left:0;bottom:0;z-index:10}
+  .logo{display:flex;align-items:center;gap:10px;padding:0 20px 28px;font-weight:600;font-size:16px}
+  .logo-icon{width:32px;height:32px;background:var(--teal);border-radius:8px;display:grid;place-items:center}
+  .logo-icon svg{color:var(--green)}
+  .nav-label{font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--muted);padding:0 20px 8px;text-transform:uppercase}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;color:var(--muted);cursor:pointer;transition:background .15s,color .15s;font-weight:400;position:relative;text-decoration:none}
+  .nav-item:hover{background:var(--bg);color:var(--text)}
+  .nav-item.active{background:#eef9f5;color:var(--teal);font-weight:500}
+  .nav-item.active::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;background:var(--green);border-radius:0 2px 2px 0}
+  .nav-item svg{flex-shrink:0}
+  .badge{margin-left:auto;background:var(--green);color:#fff;font-size:10px;font-weight:600;border-radius:20px;padding:1px 7px}
+  .sidebar-spacer{flex:1}
+  .sidebar-bottom{border-top:1px solid var(--border);padding-top:16px}
+  .user-row{display:flex;align-items:center;gap:10px;padding:12px 20px}
+  .avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--green));display:grid;place-items:center;color:#fff;font-weight:600;font-size:12px;flex-shrink:0}
+  .user-name{font-weight:500;font-size:13px}
+  .user-email{font-size:11px;color:var(--muted)}
+  .user-chevron{margin-left:auto;color:var(--muted)}
+
+  .main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column}
+  .topbar{display:flex;align-items:center;gap:16px;padding:16px 28px;background:var(--bg);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5}
+  .search-box{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;width:260px;color:var(--muted)}
+  .search-box input{border:none;outline:none;background:none;font-family:inherit;font-size:13px;color:var(--text);flex:1}
+  .search-box input::placeholder{color:var(--muted)}
+  .topbar-right{display:flex;align-items:center;gap:12px;margin-left:auto}
+  .date-pill{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:500}
+  .period-select{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:500;cursor:pointer}
+  .export-btn{display:flex;align-items:center;gap:6px;background:none;border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-family:inherit;font-size:13px;color:var(--text);font-weight:500;cursor:pointer}
+
+  .content{padding:24px 28px;display:flex;flex-direction:column;gap:20px}
+
+  .hero{background:linear-gradient(130deg,var(--teal) 0%,var(--teal-mid) 60%,#1e8070 100%);border-radius:16px;padding:28px 32px;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden;animation:fadeUp .4s ease both}
+  .hero::before{content:'';position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;background:rgba(46,204,142,.08)}
+  .hero::after{content:'';position:absolute;right:60px;bottom:-80px;width:200px;height:200px;border-radius:50%;background:rgba(46,204,142,.06)}
+  .hero-label{font-size:13px;color:rgba(255,255,255,.7);margin-bottom:8px}
+  .hero-amount{font-size:38px;font-weight:600;color:#fff;letter-spacing:-.5px}
+  .hero-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(46,204,142,.2);color:var(--green-light);border-radius:20px;padding:3px 10px;font-size:13px;font-weight:500;margin-left:12px}
+  .hero-stats{display:flex;gap:28px;z-index:1}
+  .hero-stat-label{font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px}
+  .hero-stat-val{font-size:16px;font-weight:600;color:#fff}
+  .hero-stat-sub{font-size:11px;color:rgba(255,255,255,.5)}
+
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .grid-bottom{display:grid;grid-template-columns:1fr 300px;gap:20px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  .grid-4>*:nth-child(1){animation:fadeUp .35s ease both .05s}
+  .grid-4>*:nth-child(2){animation:fadeUp .35s ease both .10s}
+  .grid-4>*:nth-child(3){animation:fadeUp .35s ease both .15s}
+  .grid-4>*:nth-child(4){animation:fadeUp .35s ease both .20s}
+  .grid-2>*:nth-child(1){animation:fadeUp .35s ease both .22s}
+  .grid-2>*:nth-child(2){animation:fadeUp .35s ease both .26s}
+  .grid-bottom>*:nth-child(1){animation:fadeUp .35s ease both .28s}
+  .grid-bottom>*:nth-child(2){animation:fadeUp .35s ease both .32s}
+
+  .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+  .section-title{display:flex;align-items:center;gap:8px;font-weight:600;font-size:15px}
+
+  /* SERVICE KPI CARD */
+  .svc-card{border-radius:12px;padding:20px;position:relative;overflow:hidden}
+  .svc-card::before{content:'';position:absolute;right:-20px;top:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.1)}
+  .svc-icon{width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.2);display:grid;place-items:center;margin-bottom:12px}
+  .svc-label{font-size:11px;color:rgba(255,255,255,.7);margin-bottom:4px}
+  .svc-amount{font-size:20px;font-weight:600;color:#fff;margin-bottom:2px}
+  .svc-qty{font-size:11px;color:rgba(255,255,255,.6)}
+  .svc-marge{font-size:11px;color:rgba(255,255,255,.8);margin-top:6px;font-weight:500}
+
+  /* bar chart */
+  .bar-chart-wrap{display:flex;align-items:flex-end;gap:4px;height:160px;position:relative}
+  .bar-col{display:flex;flex-direction:column;justify-content:flex-end;flex:1;cursor:pointer;transition:opacity .15s}
+  .bar-col:hover{opacity:.8}
+  .bar-fill{width:100%;border-radius:3px 3px 0 0}
+
+  /* stacked horizontal bars for service share */
+  .share-row{display:flex;flex-direction:column;gap:12px}
+  .share-item{display:flex;flex-direction:column;gap:5px}
+  .share-header{display:flex;align-items:center;justify-content:space-between}
+  .share-name{font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px}
+  .share-val{font-family:'DM Mono',monospace;font-size:12px}
+  .share-track{height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
+  .share-fill{height:100%;border-radius:4px;transition:width .6s ease}
+  .share-sub{font-size:11px;color:var(--muted)}
+  .stat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+  /* calendar heatmap */
+  .heatmap-wrap{display:flex;flex-direction:column;gap:3px}
+  .heatmap-row{display:flex;gap:3px}
+  .heatmap-cell{width:14px;height:14px;border-radius:2px;cursor:pointer;transition:opacity .15s}
+  .heatmap-cell:hover{opacity:.7}
+  .heatmap-label{font-size:9px;color:var(--muted);width:14px;text-align:center}
+
+  /* table */
+  .table-header{display:grid;grid-template-columns:1fr 120px 100px 100px 100px;padding:6px 0;border-bottom:1px solid var(--border);margin-bottom:4px}
+  .th{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+  .tx-row{display:grid;grid-template-columns:1fr 120px 100px 100px 100px;align-items:center;padding:11px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+  .tx-row:last-child{border-bottom:none}
+  .tx-row:hover{background:var(--bg);border-radius:8px;padding-left:6px;padding-right:6px}
+  .svc-badge{display:inline-flex;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500}
+  .tx-amount{font-family:'DM Mono',monospace;font-size:13px;font-weight:600}
+  .font-mono{font-family:'DM Mono',monospace}
+
+  /* marge card */
+  .marge-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border)}
+  .marge-row:last-child{border-bottom:none}
+  .marge-icon{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;flex-shrink:0}
+  .marge-name{flex:1;font-size:13px;font-weight:500}
+  .marge-sub{font-size:11px;color:var(--muted)}
+  .marge-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--success-text)}
+  .marge-qty{font-size:11px;color:var(--muted);text-align:right}
+
+  /* tooltip */
+  .tooltip{position:fixed;background:var(--text);color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;pointer-events:none;z-index:100;opacity:0;transition:opacity .15s;white-space:nowrap}
+  .tooltip.visible{opacity:1}
+
+  .ctrl-btn{display:flex;align-items:center;gap:5px;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:6px 12px;font-family:inherit;font-size:12px;color:var(--text);cursor:pointer}
+  .up{color:var(--success-text);font-size:12px;font-weight:500}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3C9 3 4 8.5 4 11.5a5 5 0 0010 0C14 8.5 9 3 9 3z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    Station Manager
+  </div>
+
+  <div class="nav-label">Général</div>
+  <a class="nav-item" href="station-dashboard.html">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1.5" fill="currentColor"/><rect x="9" y="2" width="5" height="5" rx="1.5" fill="currentColor" opacity=".4"/><rect x="2" y="9" width="5" height="5" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="9" width="5" height="5" rx="1.5" fill="currentColor" opacity=".4"/></svg>
+    Tableau de Bord
+  </a>
+  <a class="nav-item" href="vente-carburants.html">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M9 3C9 3 4 8.5 4 11.5a5 5 0 0010 0C14 8.5 9 3 9 3z" stroke="currentColor" stroke-width="1.5"/></svg>
+    Vente Carburants
+  </a>
+  <a class="nav-item" href="vente-produits.html">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 5h12M2 8h8M2 11h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    Vente Produits
+  </a>
+  <a class="nav-item active" href="vente-services.html">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 12V7l5-4 5 4v5a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.5"/></svg>
+    Vente Services
+  </a>
+
+  <div class="nav-label" style="margin-top:16px">Finances</div>
+  <a class="nav-item" href="finances.html">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4h12v8a1 1 0 01-1 1H3a1 1 0 01-1-1V4z" stroke="currentColor" stroke-width="1.5"/><path d="M2 4l6 4 6-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    Recettes
+  </a>
+  <a class="nav-item" href="finances.html">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1" stroke="currentColor" stroke-width="1.5"/></svg>
+    Dépenses
+  </a>
+  <a class="nav-item" href="#">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 12l4-4 3 3 5-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Marges
+    <span class="badge">Rapport</span>
+  </a>
+
+  <div class="sidebar-spacer"></div>
+  <div class="sidebar-bottom">
+    <div class="nav-item">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Paramètres
+    </div>
+    <div class="user-row">
+      <div class="avatar">GS</div>
+      <div><div class="user-name">Gérant Station</div><div class="user-email">admin@station.tn</div></div>
+      <svg class="user-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 6l2 2 2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="search-box">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="#8a92a6" stroke-width="1.5"/><path d="M9.5 9.5l2.5 2.5" stroke="#8a92a6" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <input type="text" placeholder="Rechercher service…" id="search-input">
+    </div>
+    <div class="topbar-right">
+      <div class="date-pill">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M4 1v2M10 1v2M1 5h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        02 Déc 2025 – 31 Déc 2025
+      </div>
+      <div class="period-select">
+        30 derniers jours
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <button class="export-btn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v7M4 6l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Exporter
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="hero">
+      <div>
+        <div class="hero-label">Total Vente Services – 30 derniers jours</div>
+        <div style="display:flex;align-items:baseline;gap:4px">
+          <div class="hero-amount">3 512,000 DT</div>
+          <span class="hero-badge">100% marge</span>
+        </div>
+        <div style="font-size:12px;color:rgba(255,255,255,.55);margin-top:6px">Marge totale cumulée : 18 470,166 DT · 328 transactions · 5 types de services</div>
+      </div>
+      <div class="hero-stats">
+        <div>
+          <div class="hero-stat-label">Services (30j)</div>
+          <div class="hero-stat-val">2 358,000 DT</div>
+          <div class="hero-stat-sub">67.1% du total</div>
+        </div>
+        <div>
+          <div class="hero-stat-label">Transport 20d (30j)</div>
+          <div class="hero-stat-val">920,000 DT</div>
+          <div class="hero-stat-sub">26.2% du total</div>
+        </div>
+        <div>
+          <div class="hero-stat-label">Graissage (30j)</div>
+          <div class="hero-stat-val">174,000 DT</div>
+          <div class="hero-stat-sub">4.9% du total</div>
+        </div>
+        <div>
+          <div class="hero-stat-label">Transport 30d (30j)</div>
+          <div class="hero-stat-val">60,000 DT</div>
+          <div class="hero-stat-sub">1.7% du total</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 SERVICE KPI CARDS -->
+    <div class="grid-4">
+      <div class="svc-card" style="background:linear-gradient(135deg,#0d4f4a,#1a6b63)">
+        <div class="svc-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5" stroke="white" stroke-width="1.5"/><path d="M8 5v3l2 2" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        <div class="svc-label">Services (500)</div>
+        <div class="svc-amount">2 358,000 DT</div>
+        <div class="svc-qty">30j · Cumulé : 13 606,300 DT</div>
+        <div class="svc-marge">Marge 100% → 13 606,300 DT</div>
+      </div>
+      <div class="svc-card" style="background:linear-gradient(135deg,#3b4ea8,#5b6fff)">
+        <div class="svc-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 12h12M4 12V6l4-3 4 3v6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="svc-label">Transport 20d (593)</div>
+        <div class="svc-amount">920,000 DT</div>
+        <div class="svc-qty">30j · Cumulé : 2 941,176 DT</div>
+        <div class="svc-marge">46 trajets · 20 DT / trajet</div>
+      </div>
+      <div class="svc-card" style="background:linear-gradient(135deg,#b45309,#f59e0b)">
+        <div class="svc-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        <div class="svc-label">Graissage (501)</div>
+        <div class="svc-amount">174,000 DT</div>
+        <div class="svc-qty">30j · Cumulé : 964,706 DT</div>
+        <div class="svc-marge">Marge 100% → 964,706 DT</div>
+      </div>
+      <div class="svc-card" style="background:linear-gradient(135deg,#be185d,#ef5c6b)">
+        <div class="svc-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 12h12M4 12V6l4-3 4 3v6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="svc-label">Transport 30d (594)</div>
+        <div class="svc-amount">60,000 DT</div>
+        <div class="svc-qty">30j · Cumulé : 655,462 DT</div>
+        <div class="svc-marge">2 trajets · 30 DT / trajet</div>
+      </div>
+    </div>
+
+    <!-- BAR CHART + RÉPARTITION -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 12V6h2.5v6H3zM6.75 12V3h2.5v9H6.75zM10.5 12V8H13v4h-2.5z" fill="var(--teal)"/></svg>
+            Ventes Journalières (Services)
+          </div>
+        </div>
+        <div class="bar-chart-wrap" id="svc-bar-chart"></div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px">
+          <span style="font-size:10px;color:var(--muted)">02 Déc</span>
+          <span style="font-size:10px;color:var(--muted)">31 Déc</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="var(--teal)" stroke-width="1.3"/></svg>
+            Répartition par Service
+          </div>
+        </div>
+        <div class="share-row" id="share-row"></div>
+
+        <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+          <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Marges Cumulées par Service</div>
+          <div id="marge-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSACTIONS TABLE + STATS CARD -->
+    <div class="grid-bottom">
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h3l2-5 2 10 2-7 1 2h2" stroke="var(--teal)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Toutes les Transactions Services
+          </div>
+          <button class="ctrl-btn">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 3h10M3 6h6M5 9h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            Filtrer
+          </button>
+        </div>
+        <div class="table-header">
+          <div class="th">Service</div>
+          <div class="th">Date</div>
+          <div class="th">Quantité</div>
+          <div class="th">Montant</div>
+          <div class="th">Inclus Produit</div>
+        </div>
+        <div id="tx-body" style="max-height:400px;overflow-y:auto"></div>
+      </div>
+
+      <!-- Stats summary card -->
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card" style="animation:fadeUp .35s ease both .28s">
+          <div class="section-title" style="margin-bottom:16px">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2l1.5 3 3.5.5-2.5 2.5.5 3.5L8 10l-3 1.5.5-3.5L3 5.5 6.5 5z" fill="var(--teal)" opacity=".8"/></svg>
+            Statistiques Globales
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px" id="global-stats"></div>
+        </div>
+        <div class="card" style="animation:fadeUp .35s ease both .32s">
+          <div class="section-title" style="margin-bottom:16px">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="var(--teal)" stroke-width="1.3"/><path d="M8 5v2m0 2h.01" stroke="var(--teal)" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Info Services
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--muted)">
+            <div>📍 <strong style="color:var(--text)">500</strong> – Service général (lavage, etc.)</div>
+            <div>🔧 <strong style="color:var(--text)">501</strong> – Graissage véhicules</div>
+            <div>🛢️ <strong style="color:var(--text)">502</strong> – Spirax (huile transmission)</div>
+            <div>🚛 <strong style="color:var(--text)">593</strong> – Transport 20 dinars</div>
+            <div>🚛 <strong style="color:var(--text)">594</strong> – Transport 30 dinars</div>
+            <div style="margin-top:6px;padding-top:10px;border-top:1px solid var(--border);color:var(--text);font-weight:500">Marge : 100% (pas de coût d'achat)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ── DATA FROM XLS ──────────────────────────────────────────────
+const DAILY = [
+  {date:'2025-12-02',total:88},{date:'2025-12-03',total:108},{date:'2025-12-04',total:80},
+  {date:'2025-12-05',total:80},{date:'2025-12-06',total:111},{date:'2025-12-07',total:179},
+  {date:'2025-12-08',total:162},{date:'2025-12-09',total:113},{date:'2025-12-10',total:86},
+  {date:'2025-12-11',total:102},{date:'2025-12-12',total:108},{date:'2025-12-13',total:140},
+  {date:'2025-12-14',total:116},{date:'2025-12-15',total:96},{date:'2025-12-16',total:93},
+  {date:'2025-12-17',total:104},{date:'2025-12-18',total:136},{date:'2025-12-19',total:42},
+  {date:'2025-12-20',total:131},{date:'2025-12-21',total:105},{date:'2025-12-22',total:151},
+  {date:'2025-12-23',total:103},{date:'2025-12-24',total:138},{date:'2025-12-25',total:138},
+  {date:'2025-12-26',total:127},{date:'2025-12-27',total:153},{date:'2025-12-28',total:172},
+  {date:'2025-12-29',total:118},{date:'2025-12-30',total:104},{date:'2025-12-31',total:128}
+];
+
+const SERVICES = [
+  {id:500,libelle:'Services',     color:'#0d4f4a', total30:2358, qty30:2358, cumul:13606.300, marge_cumul:13606.300},
+  {id:593,libelle:'Transport 20d',color:'#5b6fff', total30:920,  qty30:46,   cumul:2941.176,  marge_cumul:2941.176},
+  {id:501,libelle:'Graissage',    color:'#f59e0b', total30:174,  qty30:174,  cumul:964.706,   marge_cumul:964.706},
+  {id:594,libelle:'Transport 30d',color:'#ef5c6b', total30:60,   qty30:2,    cumul:655.462,   marge_cumul:655.462},
+  {id:502,libelle:'Spirax',       color:'#2ecc8e', total30:0,    qty30:0,    cumul:302.521,   marge_cumul:302.521},
+];
+
+const ALL_TX = [
+  {svc:'Services',date:'2025-12-31',qty:88,  ttc_prod:1,pxv:88},
+  {svc:'Transport 20d',date:'2025-12-31',qty:2,ttc_prod:20,pxv:40},
+  {svc:'Services',date:'2025-12-30',qty:64,  ttc_prod:1,pxv:64},
+  {svc:'Transport 20d',date:'2025-12-30',qty:2,ttc_prod:20,pxv:40},
+  {svc:'Services',date:'2025-12-29',qty:78,  ttc_prod:1,pxv:78},
+  {svc:'Transport 20d',date:'2025-12-29',qty:2,ttc_prod:20,pxv:40},
+  {svc:'Services',date:'2025-12-28',qty:172, ttc_prod:1,pxv:172},
+  {svc:'Services',date:'2025-12-27',qty:33,  ttc_prod:1,pxv:33},
+  {svc:'Transport 20d',date:'2025-12-27',qty:6,ttc_prod:20,pxv:120},
+  {svc:'Services',date:'2025-12-26',qty:107, ttc_prod:1,pxv:107},
+  {svc:'Transport 20d',date:'2025-12-26',qty:1,ttc_prod:20,pxv:20},
+  {svc:'Services',date:'2025-12-25',qty:48,  ttc_prod:1,pxv:48},
+  {svc:'Graissage',date:'2025-12-25',qty:50, ttc_prod:1,pxv:50},
+  {svc:'Transport 20d',date:'2025-12-25',qty:2,ttc_prod:20,pxv:40},
+  {svc:'Services',date:'2025-12-24',qty:94,  ttc_prod:1,pxv:94},
+  {svc:'Graissage',date:'2025-12-24',qty:24, ttc_prod:1,pxv:24},
+  {svc:'Transport 20d',date:'2025-12-24',qty:1,ttc_prod:20,pxv:20},
+  {svc:'Services',date:'2025-12-23',qty:63,  ttc_prod:1,pxv:63},
+  {svc:'Transport 20d',date:'2025-12-23',qty:2,ttc_prod:20,pxv:40},
+  {svc:'Services',date:'2025-12-22',qty:81,  ttc_prod:1,pxv:81},
+  {svc:'Graissage',date:'2025-12-22',qty:50, ttc_prod:1,pxv:50},
+  {svc:'Transport 20d',date:'2025-12-22',qty:1,ttc_prod:20,pxv:20},
+  {svc:'Services',date:'2025-12-21',qty:105, ttc_prod:1,pxv:105},
+  {svc:'Services',date:'2025-12-20',qty:31,  ttc_prod:1,pxv:31},
+  {svc:'Transport 20d',date:'2025-12-20',qty:5,ttc_prod:20,pxv:100},
+  {svc:'Services',date:'2025-12-19',qty:42,  ttc_prod:1,pxv:42},
+  {svc:'Services',date:'2025-12-18',qty:26,  ttc_prod:1,pxv:26},
+  {svc:'Graissage',date:'2025-12-18',qty:50, ttc_prod:1,pxv:50},
+  {svc:'Transport 20d',date:'2025-12-18',qty:3,ttc_prod:20,pxv:60},
+  {svc:'Services',date:'2025-12-17',qty:84,  ttc_prod:1,pxv:84},
+  {svc:'Transport 20d',date:'2025-12-17',qty:1,ttc_prod:20,pxv:20},
+  {svc:'Services',date:'2025-12-16',qty:33,  ttc_prod:1,pxv:33},
+  {svc:'Transport 20d',date:'2025-12-16',qty:3,ttc_prod:20,pxv:60},
+  {svc:'Services',date:'2025-12-15',qty:16,  ttc_prod:1,pxv:16},
+  {svc:'Transport 20d',date:'2025-12-15',qty:4,ttc_prod:20,pxv:80},
+  {svc:'Services',date:'2025-12-14',qty:116, ttc_prod:1,pxv:116},
+  {svc:'Services',date:'2025-12-13',qty:140, ttc_prod:1,pxv:140},
+  {svc:'Services',date:'2025-12-12',qty:108, ttc_prod:1,pxv:108},
+  {svc:'Services',date:'2025-12-11',qty:102, ttc_prod:1,pxv:102},
+  {svc:'Services',date:'2025-12-10',qty:86,  ttc_prod:1,pxv:86},
+  {svc:'Services',date:'2025-12-09',qty:73,  ttc_prod:1,pxv:73},
+  {svc:'Transport 20d',date:'2025-12-09',qty:2,ttc_prod:20,pxv:40},
+  {svc:'Services',date:'2025-12-08',qty:22,  ttc_prod:1,pxv:22},
+  {svc:'Transport 20d',date:'2025-12-08',qty:4,ttc_prod:20,pxv:80},
+  {svc:'Transport 30d',date:'2025-12-08',qty:2,ttc_prod:30,pxv:60},
+  {svc:'Services',date:'2025-12-07',qty:179, ttc_prod:1,pxv:179},
+  {svc:'Services',date:'2025-12-06',qty:11,  ttc_prod:1,pxv:11},
+  {svc:'Transport 20d',date:'2025-12-06',qty:5,ttc_prod:20,pxv:100},
+  {svc:'Services',date:'2025-12-05',qty:80,  ttc_prod:1,pxv:80},
+  {svc:'Services',date:'2025-12-04',qty:80,  ttc_prod:1,pxv:80},
+  {svc:'Services',date:'2025-12-03',qty:108, ttc_prod:1,pxv:108},
+  {svc:'Services',date:'2025-12-02',qty:88,  ttc_prod:1,pxv:88},
+];
+
+// ── HELPERS ───────────────────────────────────────────────────
+const fmtDT = v => Math.abs(v).toLocaleString('fr-TN',{minimumFractionDigits:3,maximumFractionDigits:3})+' DT';
+const fmtDate = s => new Intl.DateTimeFormat('fr-TN',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(s));
+const fmtShort = s => new Intl.DateTimeFormat('fr-TN',{day:'2-digit',month:'short'}).format(new Date(s));
+
+const SVC_COLORS = {
+  'Services':'#0d4f4a','Transport 20d':'#5b6fff',
+  'Graissage':'#f59e0b','Transport 30d':'#ef5c6b','Spirax':'#2ecc8e'
+};
+
+// ── BAR CHART ─────────────────────────────────────────────────
+function renderBarChart() {
+  const wrap = document.getElementById('svc-bar-chart');
+  const tip  = document.getElementById('tooltip');
+  const maxV = Math.max(...DAILY.map(d=>d.total));
+
+  DAILY.forEach(d => {
+    const pct = d.total / maxV;
+    const h   = Math.max(pct*150, 4);
+    const col = document.createElement('div');
+    col.className='bar-col';
+    const bar = document.createElement('div');
+    bar.className='bar-fill';
+    bar.style.cssText=`height:${h}px;background:#0d4f4a;border-radius:3px 3px 0 0`;
+    col.appendChild(bar);
+    col.addEventListener('mousemove', e=>{
+      tip.textContent=fmtShort(d.date)+' — '+fmtDT(d.total);
+      tip.style.left=e.clientX+12+'px'; tip.style.top=e.clientY-10+'px';
+      tip.classList.add('visible');
+    });
+    col.addEventListener('mouseleave',()=>tip.classList.remove('visible'));
+    wrap.appendChild(col);
+  });
+}
+
+// ── RÉPARTITION ───────────────────────────────────────────────
+function renderShare() {
+  const wrap = document.getElementById('share-row');
+  const total30 = SERVICES.reduce((s,sv)=>s+sv.total30,0);
+  SERVICES.forEach(sv=>{
+    const pct = total30>0 ? (sv.total30/total30*100).toFixed(1) : '0.0';
+    const barW = total30>0 ? Math.round((sv.total30/total30)*100) : 0;
+    const row = document.createElement('div');
+    row.className='share-item';
+    row.innerHTML=`
+      <div class="share-header">
+        <span class="share-name"><div class="stat-dot" style="background:${sv.color}"></div>${sv.libelle}</span>
+        <span class="share-val">${fmtDT(sv.total30)}</span>
+      </div>
+      <div class="share-track"><div class="share-fill" style="width:${barW}%;background:${sv.color}"></div></div>
+      <div class="share-sub">${pct}% du total 30j</div>
+    `;
+    wrap.appendChild(row);
+  });
+}
+
+// ── MARGE LIST ────────────────────────────────────────────────
+function renderMargeList() {
+  const wrap = document.getElementById('marge-list');
+  SERVICES.forEach(sv=>{
+    const row = document.createElement('div');
+    row.className='marge-row';
+    row.innerHTML=`
+      <div class="marge-icon" style="background:${sv.color}20">
+        <div class="stat-dot" style="background:${sv.color}"></div>
+      </div>
+      <div style="flex:1">
+        <div class="marge-name">${sv.libelle}</div>
+        <div class="marge-sub">ID ${sv.id}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="marge-val">${fmtDT(sv.marge_cumul)}</div>
+        <div class="marge-qty">100% marge</div>
+      </div>
+    `;
+    wrap.appendChild(row);
+  });
+
+  const totalMarge = SERVICES.reduce((s,sv)=>s+sv.marge_cumul,0);
+  const tot = document.createElement('div');
+  tot.style.cssText='padding-top:12px;border-top:2px solid var(--border);display:flex;justify-content:space-between;align-items:center;margin-top:4px';
+  tot.innerHTML=`<span style="font-weight:600">Total Marge</span><span style="font-family:DM Mono,monospace;font-size:14px;font-weight:700;color:var(--success-text)">${fmtDT(totalMarge)}</span>`;
+  wrap.appendChild(tot);
+}
+
+// ── TRANSACTIONS TABLE ────────────────────────────────────────
+function renderTx(data) {
+  const body = document.getElementById('tx-body');
+  body.innerHTML='';
+  data.forEach(t=>{
+    const row = document.createElement('div');
+    row.className='tx-row';
+    const color = SVC_COLORS[t.svc]||'#8a92a6';
+    row.innerHTML=`
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0"></div>
+        <span style="font-size:13px;font-weight:500">${t.svc}</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted)">${fmtShort(t.date)}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:12px">${t.qty}</div>
+      <div class="tx-amount">${fmtDT(t.pxv)}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${t.ttc_prod} DT/u</div>
+    `;
+    body.appendChild(row);
+  });
+}
+
+// ── GLOBAL STATS ──────────────────────────────────────────────
+function renderGlobalStats() {
+  const wrap = document.getElementById('global-stats');
+  const stats = [
+    {label:'Total transactions',   val:'328', sub:'Depuis juin 2025'},
+    {label:'Marge totale cumulée', val:'18 470,166 DT', sub:'100% sur tous les services'},
+    {label:'Service le + fréquent',val:'Services (500)', sub:'16 191,5 DT quantité cumulée'},
+    {label:'Moy. journalière (30j)',val:'117,067 DT', sub:'3 512 DT ÷ 30 jours'},
+  ];
+  stats.forEach(s=>{
+    const row = document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)';
+    row.innerHTML=`
+      <div>
+        <div style="font-size:13px;font-weight:500">${s.label}</div>
+        <div style="font-size:11px;color:var(--muted)">${s.sub}</div>
+      </div>
+      <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--teal)">${s.val}</div>
+    `;
+    wrap.appendChild(row);
+  });
+}
+
+// ── SEARCH ────────────────────────────────────────────────────
+document.getElementById('search-input').addEventListener('input', function(){
+  const q = this.value.toLowerCase();
+  const filtered = q ? ALL_TX.filter(t=>t.svc.toLowerCase().includes(q)) : ALL_TX;
+  renderTx(filtered);
+});
+
+// ── INIT ──────────────────────────────────────────────────────
+renderBarChart();
+renderShare();
+renderMargeList();
+renderTx(ALL_TX);
+renderGlobalStats();
+</script>
+</body>
+</html>

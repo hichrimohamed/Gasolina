@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment variables — NEVER commit these
+.env
+**/.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+**/dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Excel test files (local data, not for repo)
+excel files test/
+*.xls
+*.xlsx
+
+# IDE
+.vscode/
+.idea/
+
+# Claude Code local config
+.claude/
