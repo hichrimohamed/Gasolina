@@ -32,3 +32,6 @@ excel files test/
 
 # Claude Code local config
 .claude/
+
+# Project docs (local only)
+README.md
